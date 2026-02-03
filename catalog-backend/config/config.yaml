@@ -1,0 +1,8 @@
+server:
+  port: "8080"
+  mode: "debug"
+  read_timeout: 10
+  write_timeout: 10
+
+database:
+  path: "./catalog.db"

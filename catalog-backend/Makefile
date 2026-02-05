@@ -4,7 +4,7 @@ run:
 	go run cmd/main.go
 
 build:
-	go build -o bin/catalog-backend.exd cmd/main.go
+	go build -o bin/catalog-backend.exe cmd/main.go
 
 test:
 	go test ./... -v

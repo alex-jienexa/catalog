@@ -20,26 +20,30 @@ func NewSQLiteProductRepository(db *sqlx.DB) repository.ProductRepository {
 }
 
 func (r *sqliteProductRepository) Create(ctx context.Context, product *entity.ProductCreate) (*entity.Product, error) {
+	// Вместо именованных параметров используем позиционные
 	query := `
-		INSERT INTO products (name, price, section_id, description, image_url, created_at, updated_at)
-		VALUES (:name, :price, :section_id, :description, :image_url, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-		RETURNING *
-	`
+        INSERT INTO products (name, price, section_id, description, image_url, is_active, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `
 
-	rows, err := r.db.NamedQueryContext(ctx, query, product)
+	result, err := r.db.ExecContext(ctx, query,
+		product.Name,
+		product.Price,
+		product.SectionID,
+		product.Description,
+		product.ImageURL,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)
 	}
-	defer rows.Close()
 
-	var createdProduct entity.Product
-	if rows.Next() {
-		if err := rows.StructScan(&createdProduct); err != nil {
-			return nil, fmt.Errorf("failed to scan product: %w", err)
-		}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get last insert id: %w", err)
 	}
 
-	return &createdProduct, nil
+	// Получаем созданный продукт
+	return r.GetByID(ctx, int(id))
 }
 
 func (r *sqliteProductRepository) GetByID(ctx context.Context, id int) (*entity.Product, error) {
@@ -48,9 +52,6 @@ func (r *sqliteProductRepository) GetByID(ctx context.Context, id int) (*entity.
 	var product entity.Product
 	err := r.db.GetContext(ctx, &product, query, id)
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
-			return nil, nil
-		}
 		return nil, fmt.Errorf("failed to get product: %w", err)
 	}
 

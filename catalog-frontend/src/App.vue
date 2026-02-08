@@ -1,11 +1,40 @@
-<script setup></script>
-
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <Header />
+  <main>
+    <router-view />
+  </main>
 </template>
 
-<style scoped></style>
+<script>
+import Header from './components/Header.vue'
+
+export default {
+  name: 'App',
+  components: {
+    Header
+  }
+}
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f5f7fa;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+main {
+  min-height: calc(100vh - 70px);
+}
+</style>

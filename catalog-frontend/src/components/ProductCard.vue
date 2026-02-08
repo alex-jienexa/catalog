@@ -1,0 +1,202 @@
+<template>
+  <div class="product-card" @click="goToProduct">
+    <div class="product-image">
+      <img 
+        :src="product.image_url || 'https://via.placeholder.com/300x200?text=Нет+фото'" 
+        :alt="product.name"
+        @error="handleImageError"
+      />
+    </div>
+    <div class="product-info">
+      <h3 class="product-name">{{ product.name }}</h3>
+      <div class="product-price">
+        {{ formatPrice(product.price) }} ₽
+      </div>
+      <div class="product-description">
+        {{ truncateDescription(product.description) }}
+      </div>
+      <div class="product-meta">
+        <span class="section-badge">
+          {{ getSectionName(product.section_id) }}
+        </span>
+        <span class="date">
+          {{ formatDate(product.created_at) }}
+        </span>
+      </div>
+      <button 
+        v-if="showContactButton" 
+        @click.stop="showContact = true"
+        class="contact-btn"
+      >
+        Связаться с продавцом
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+const props = defineProps({
+  product: {
+    type: Object,
+    required: true,
+    default: () => ({})
+  },
+  sections: {
+    type: Array,
+    default: () => []
+  },
+  showContactButton: {
+    type: Boolean,
+    default: true
+  }
+})
+
+const router = useRouter()
+const showContact = ref(false)
+
+const getSectionName = (sectionId) => {
+  const section = props.sections.find(s => s.id === sectionId)
+  return section ? section.name : 'Неизвестный раздел'
+}
+
+const formatPrice = (price) => {
+  if (!price && price !== 0) return '0'
+  return new Intl.NumberFormat('ru-RU').format(price)
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  try {
+    return new Date(dateString).toLocaleDateString('ru-RU')
+  } catch (e) {
+    return ''
+  }
+}
+
+const truncateDescription = (description) => {
+  if (!description) return 'Нет описания'
+  return description.length > 100 
+    ? description.substring(0, 100) + '...' 
+    : description
+}
+
+const handleImageError = (event) => {
+  event.target.src = 'https://via.placeholder.com/300x200?text=Нет+фото'
+}
+
+const goToProduct = () => {
+  if (props.product && props.product.id) {
+    router.push(`/product/${props.product.id}`)
+  }
+}
+
+console.log('ProductCard получил товар:', props.product)
+</script>
+
+<style scoped>
+.product-card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.product-image {
+  height: 200px;
+  overflow: hidden;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
+.product-info {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-name {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.3;
+}
+
+.product-price {
+  font-size: 22px;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 10px;
+}
+
+.product-description {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 15px;
+  flex-grow: 1;
+}
+
+.product-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 12px;
+  color: #888;
+}
+
+.section-badge {
+  background: #f1f3ff;
+  color: #667eea;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.date {
+  font-style: italic;
+}
+
+.contact-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+  margin-top: auto;
+}
+
+.contact-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+</style>

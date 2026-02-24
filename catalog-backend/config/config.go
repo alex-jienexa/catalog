@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -25,6 +26,8 @@ type DatabaseConfig struct {
 func LoadConfig(path string) (*Config, error) {
 	viper.SetConfigFile(path)
 	viper.SetConfigType("yaml")
+	viper.AutomaticEnv()                                   // Включаем чтение переменных окружения
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_")) // DB_PATH -> database.path
 
 	viper.SetDefault("server.port", "8080")
 	viper.SetDefault("server.mode", "debug")

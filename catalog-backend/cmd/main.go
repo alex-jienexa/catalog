@@ -7,13 +7,26 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/ZeRg0912/logger"
 )
 
 func main() {
+	// Инициализация логгера
+	err := logger.InitBoth(logger.LevelInfo, logger.LevelDebug, "logs/app.log", 10*1024*1024)
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+	// Закрывать логгер при выходе из программы, чтобы логи были записаны
+	defer logger.Close()
+
+	logger.Info("Launching programm...")
+
 	// Загрузка конфигурации
 	cfg, err := config.LoadConfig("./config/config.yaml")
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		logger.Error("Failed to load config: %v", err)
+		os.Exit(1)
 	}
 
 	// Создание приложения
@@ -25,7 +38,8 @@ func main() {
 
 	go func() {
 		if err := application.Run(); err != nil {
-			log.Fatalf("Failed to run application: %v", err)
+			logger.Error("Failed to run application: %v", err)
+			os.Exit(1)
 		}
 	}()
 

@@ -3,6 +3,7 @@ package app
 import (
 	"catalog-backend/config"
 	"catalog-backend/internal/delivery/http"
+	"catalog-backend/internal/delivery/http/middleware"
 	"catalog-backend/internal/infrastructure/database"
 	infraRepo "catalog-backend/internal/infrastructure/repository"
 	"catalog-backend/internal/usecase"
@@ -107,6 +108,7 @@ func RunMigrations(db *sql.DB) error {
 func setupMiddleware(router *gin.Engine) {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	router.Use(middleware.RequestLogger()) // наш кастомный логер
 	router.Use(CORSMiddleware())
 }
 

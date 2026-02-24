@@ -55,6 +55,10 @@ func (a *App) Run() error {
 	router := http.NewRouter(productUC, sectionUC, contactUC)
 	router.SetupRoutes(a.router)
 
+	if err := http.ServeFrontend(a.router); err != nil {
+		return err
+	}
+
 	// Запуск сервера
 	addr := ":" + a.config.Server.Port
 	log.Printf("Server starting on %s", addr)

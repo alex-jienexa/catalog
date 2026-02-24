@@ -1,10 +1,13 @@
-.PHONY: run build test clean migrate
+.PHONY: run build buildl test clean migrate
 
 run:
 	go run cmd/main.go
 
 build:
 	go build -o bin/catalog-backend.exe cmd/main.go
+
+buildl:
+	GOOS=linux GOARCH=amd64 go build -o catalog-app.exe ./cmd/main.go
 
 test:
 	go test ./... -v

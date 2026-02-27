@@ -1,4 +1,5 @@
 catalog-backend/catalog.db
+catalog-backend/uploads
 
 # Logs
 logs

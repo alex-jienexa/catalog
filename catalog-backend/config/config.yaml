@@ -6,3 +6,7 @@ server:
 
 database:
   path: "./catalog.db"
+
+upload:
+  path: "./uploads"
+  max_size: 5242880  # 5 MB

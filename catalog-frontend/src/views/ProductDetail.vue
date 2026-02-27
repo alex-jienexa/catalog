@@ -10,12 +10,7 @@
       
       <div class="product-grid">
         <div class="product-images">
-          <img 
-            :src="product.image_url || 'https://via.placeholder.com/500x400?text=Нет+фото'" 
-            :alt="product.name"
-            class="main-image"
-            @error="handleImageError"
-          />
+          <img :src="mainImageSrc" :alt="product.name" class="main-image" @error="handleImageError" />
         </div>
         
         <div class="product-info">
@@ -69,11 +64,7 @@
             class="similar-card"
             @click="goToProduct(similar.id)"
           >
-            <img 
-              :src="similar.image_url || 'https://via.placeholder.com/150x100?text=Нет+фото'" 
-              :alt="similar.name"
-              class="similar-image"
-            />
+            <img :src="similar.image_url && similar.image_url.startsWith('http') ? similar.image_url : similar.image_url || 'https://via.placeholder.com/150x100?text=Нет+фото'" />
             <div class="similar-info">
               <h4>{{ similar.name }}</h4>
               <div class="similar-price">{{ formatPrice(similar.price) }} ₽</div>
@@ -102,6 +93,16 @@ const sections = ref([])
 const similarProducts = ref([])
 const loading = ref(true)
 const showContactModal = ref(false)
+
+const mainImageSrc = computed(() => {
+  if (!product.value?.image_url) {
+    return 'https://via.placeholder.com/500x400?text=Нет+фото'
+  }
+  if (product.value.image_url.startsWith('http')) {
+    return product.value.image_url
+  }
+  return product.value.image_url
+})
 
 const loadProduct = async () => {
   loading.value = true

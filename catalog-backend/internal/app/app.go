@@ -9,6 +9,7 @@ import (
 	"catalog-backend/internal/usecase"
 	"database/sql"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -34,13 +35,17 @@ func (a *App) Run() error {
 	}
 	a.db = db
 
+	if err := os.MkdirAll(a.config.Upload.Path+"/products", 0755); err != nil {
+		return err
+	}
+
 	// Инициализация репозиториев
 	productRepo := infraRepo.NewSQLiteProductRepository(db)
 	sectionRepo := infraRepo.NewSQLiteSectionRepository(db)
 	contactRepo := infraRepo.NewSQLiteContactRepository(db)
 
 	// Инициализация use cases
-	productUC := usecase.NewProductUseCase(productRepo, sectionRepo)
+	productUC := usecase.NewProductUseCase(productRepo, sectionRepo, a.config.Upload.Path)
 	sectionUC := usecase.NewSectionUseCase(sectionRepo, productRepo)
 	contactUC := usecase.NewContactUseCase(contactRepo)
 
@@ -52,8 +57,8 @@ func (a *App) Run() error {
 	setupMiddleware(a.router)
 
 	// Настройка маршрутов
-	router := http.NewRouter(productUC, sectionUC, contactUC)
-	router.SetupRoutes(a.router)
+	router := http.NewRouter(productUC, sectionUC, contactUC, &a.config.Upload)
+	router.SetupRoutes(a.router, a.config)
 
 	if err := http.ServeFrontend(a.router); err != nil {
 		return err

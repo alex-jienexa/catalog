@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/v1';
+const API_URL = '/api/v1';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -139,7 +139,19 @@ export const admin = {
       throw new Error('Требуется авторизация');
     }
     return adminAPI.deleteContact(id);
-  }
+  },
+
+  uploadProductImage: (id, formData, onProgress) => {
+    return api.post(`/admin/products/${id}/image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress?.(percentCompleted);
+        }
+      }
+    });
+}
 };
 
 export default api;

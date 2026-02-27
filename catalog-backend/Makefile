@@ -7,7 +7,7 @@ build:
 	go build -o bin/catalog-backend.exe cmd/main.go
 
 buildl:
-	GOOS=linux GOARCH=amd64 go build -o catalog-app.exe ./cmd/main.go
+	$GOOS=linux $GOARCH=amd64 go build -o catalog-app ./cmd/main.go
 
 test:
 	go test ./... -v

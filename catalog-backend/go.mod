@@ -4,13 +4,16 @@ go 1.25.1
 
 require (
 	github.com/gin-gonic/gin v1.11.0
-	github.com/jmoiron/sqlx v1.3.5
-	github.com/mattn/go-sqlite3 v1.14.17
+	github.com/jmoiron/sqlx v1.4.0
+	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/spf13/viper v1.21.0
+	go.uber.org/zap v1.24.0
 )
 
+require github.com/google/uuid v1.6.0 // indirect
+
 require (
-	github.com/ZeRg0912/logger v1.0.7 // indirect
+	github.com/ZeRg0912/logger v1.0.7
 	github.com/bytedance/sonic v1.14.0 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect

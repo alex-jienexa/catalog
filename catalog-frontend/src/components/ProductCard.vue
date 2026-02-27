@@ -2,7 +2,7 @@
   <div class="product-card" @click="goToProduct">
     <div class="product-image">
       <img 
-        :src="product.image_url || 'https://via.placeholder.com/300x200?text=Нет+фото'" 
+        :src="image_src" 
         :alt="product.name"
         @error="handleImageError"
       />
@@ -57,6 +57,19 @@ const props = defineProps({
 const router = useRouter()
 const showContact = ref(false)
 
+const image_src = computed(() => {
+  if (!props.product.image_url) {
+    return 'https://via.placeholder.com/300x200?text=Нет+фото'
+  }
+  // Если путь уже абсолютный (начинается с http), используем как есть
+  if (props.product.image_url.startsWith('http')) {
+    return props.product.image_url
+  }
+  // Если путь относительный (начинается с /uploads), добавляем текущий origin
+  // В production это будет тот же домен
+  return props.product.image_url
+})
+
 const getSectionName = (sectionId) => {
   const section = props.sections.find(s => s.id === sectionId)
   return section ? section.name : 'Неизвестный раздел'
@@ -84,6 +97,7 @@ const truncateDescription = (description) => {
 }
 
 const handleImageError = (event) => {
+  console.error('Ошибка загрузки изображения:', props.product.image_url)
   event.target.src = 'https://via.placeholder.com/300x200?text=Нет+фото'
 }
 

@@ -52,13 +52,22 @@
         </div>
         
         <div class="form-group">
-          <label for="image_url">URL изображения</label>
-          <input
-            id="image_url"
-            v-model="form.image_url"
-            type="text"
-            placeholder="https://example.com/image.jpg"
+          <label>Изображение</label>
+          <input 
+            type="file" 
+            @change="handleFileSelect" 
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            ref="fileInput"
           />
+          <div v-if="uploadProgress > 0" class="progress">
+            <div class="progress-bar" :style="{ width: uploadProgress + '%' }"></div>
+            <span class="progress-text">{{ uploadProgress }}%</span>
+          </div>
+          <div v-if="imagePreview" class="image-preview">
+            <img :src="imagePreview" alt="Preview" />
+            <button type="button" @click="removeImage" class="remove-image">×</button>
+          </div>
+          <p v-if="uploadError" class="error">{{ uploadError }}</p>
         </div>
         
         <div class="form-group checkbox-group">
@@ -110,9 +119,15 @@ export default {
       price: 0,
       section_id: '',
       description: '',
-      image_url: '',
       is_active: true
     })
+
+    // Для изображения
+    const selectedFile = ref(null)
+    const imagePreview = ref('')
+    const uploadProgress = ref(0)
+    const uploadError = ref('')
+    const fileInput = ref(null)
 
     const editing = computed(() => !!props.product)
 
@@ -123,9 +138,13 @@ export default {
         price: 0,
         section_id: '',
         description: '',
-        image_url: '',
         is_active: true
       }
+      selectedFile.value = null
+      imagePreview.value = ''
+      uploadProgress.value = 0
+      uploadError.value = ''
+      if (fileInput.value) fileInput.value.value = ''
     }
 
     // Заполняем форму данными товара при редактировании
@@ -136,9 +155,12 @@ export default {
           price: product.price || 0,
           section_id: product.section_id || '',
           description: product.description || '',
-          image_url: product.image_url || '',
           is_active: product.is_active !== undefined ? product.is_active : true
         }
+        imagePreview.value = product.image_url || ''
+        selectedFile.value = null
+        uploadProgress.value = 0
+        uploadError.value = ''
       } else {
         resetForm()
       }
@@ -149,37 +171,96 @@ export default {
       emit('close')
     }
 
+    // Обработка выбора файла
+    const handleFileSelect = (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+      
+      // Проверка типа
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        uploadError.value = 'Допустимые форматы: JPEG, PNG, GIF, WEBP'
+        fileInput.value.value = ''
+        return
+      }
+      
+      // Проверка размера (например, 5MB)
+      const maxSize = 5 * 1024 * 1024
+      if (file.size > maxSize) {
+        uploadError.value = 'Файл слишком большой. Максимум 5MB'
+        fileInput.value.value = ''
+        return
+      }
+      
+      uploadError.value = ''
+      selectedFile.value = file
+      
+      // Создание превью
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        imagePreview.value = e.target.result
+      }
+      reader.readAsDataURL(file)
+    }
+
+    // Удаление выбранного изображения
+    const removeImage = () => {
+      selectedFile.value = null
+      imagePreview.value = ''
+      uploadProgress.value = 0
+      if (fileInput.value) fileInput.value.value = ''
+    }
+
+    // Загрузка изображения на сервер (отдельная функция)
+    const uploadImage = async (productId) => {
+      if (!selectedFile.value) return
+      
+      const formData = new FormData()
+      formData.append('image', selectedFile.value)
+      
+      try {
+        uploadProgress.value = 0
+        await admin.uploadProductImage(productId, formData, (progress) => {
+          uploadProgress.value = progress
+        })
+        // После успешной загрузки можно обновить превью (ответ приходит с новым URL)
+        // Но проще просто перезагрузить список товаров через emit
+      } catch (error) {
+        console.error('Ошибка загрузки изображения:', error)
+        uploadError.value = 'Не удалось загрузить изображение: ' + (error.response?.data?.error || error.message)
+        throw error // пробрасываем, чтобы handleSubmit знал об ошибке
+      }
+    }
+
     const handleSubmit = async () => {
       loading.value = true
+      uploadError.value = ''
       console.log('Отправка данных:', form.value)
       
       try {
-        const submitData = {
+        const productData = {
           name: form.value.name.trim(),
           price: parseFloat(form.value.price),
           section_id: parseInt(form.value.section_id),
+          description: form.value.description.trim() || null,
           is_active: form.value.is_active
         }
 
-        // Добавляем опциональные поля, если они заполнены
-        if (form.value.description?.trim()) {
-          submitData.description = form.value.description.trim()
-        }
-        
-        if (form.value.image_url?.trim()) {
-          submitData.image_url = form.value.image_url.trim()
-        }
-
-        console.log('Данные для отправки:', submitData)
-
-        if (props.product) {
-          // Редактирование существующего товара
-          console.log('Редактирование товара с ID:', props.product.id)
-          await admin.updateProduct(props.product.id, submitData)
+        let savedProduct
+    
+        if (editing.value) {
+          // Обновление товара (без изображения)
+          const response = await admin.updateProduct(props.product.id, productData)
+          savedProduct = response.data
         } else {
-          // Создание нового товара
-          console.log('Создание нового товара')
-          await admin.createProduct(submitData)
+          // Создание товара (без изображения)
+          const response = await admin.createProduct(productData)
+          savedProduct = response.data
+        }
+    
+        // Если есть выбранный файл, загружаем его для этого товара
+        if (selectedFile.value) {
+          await uploadImage(savedProduct.id)
         }
 
         console.log('Товар успешно сохранен')
@@ -197,8 +278,13 @@ export default {
       loading,
       form,
       editing,
+      imagePreview,
+      uploadError,
+      uploadProgress,
       closeModal,
-      handleSubmit
+      handleSubmit,
+      handleFileSelect,
+      removeImage,
     }
   }
 }
@@ -347,5 +433,63 @@ export default {
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.progress {
+  margin-top: 10px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  height: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.progress-bar {
+  background: #667eea;
+  height: 100%;
+  transition: width 0.3s;
+}
+.progress-text {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #333;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.image-preview {
+  margin-top: 10px;
+  position: relative;
+  display: inline-block;
+}
+.image-preview img {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.remove-image {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.error {
+  color: #ff6b6b;
+  font-size: 12px;
+  margin-top: 5px;
 }
 </style>

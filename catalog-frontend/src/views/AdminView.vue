@@ -267,6 +267,13 @@ export default {
     const showModal = ref('')
     const editingItem = ref(null)
 
+    const handleProductSaved = async () => {
+      console.log('Данные сохранены')
+      closeModal()
+      await loadProducts()    // дожидаемся загрузки товаров
+      await loadSections()    // если нужно
+    }
+    
     // Загрузка данных
     const loadProducts = async () => {
       loading.value.products = true
@@ -443,6 +450,7 @@ export default {
       
       // Управление вкладками
       switchTab,
+      handleProductSaved,
       
       // Управление модальными окнами
       openModal,

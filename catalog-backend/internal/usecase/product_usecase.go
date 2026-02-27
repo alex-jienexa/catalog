@@ -5,17 +5,22 @@ import (
 	"catalog-backend/internal/domain/repository"
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 type ProductUseCase struct {
 	productRepo repository.ProductRepository
 	sectionRepo repository.SectionRepository
+	uploadPath  string
 }
 
-func NewProductUseCase(productRepo repository.ProductRepository, sectionRepo repository.SectionRepository) *ProductUseCase {
+func NewProductUseCase(productRepo repository.ProductRepository, sectionRepo repository.SectionRepository, uploadPath string) *ProductUseCase {
 	return &ProductUseCase{
 		productRepo: productRepo,
 		sectionRepo: sectionRepo,
+		uploadPath:  uploadPath,
 	}
 }
 
@@ -110,6 +115,14 @@ func (uc *ProductUseCase) DeleteProduct(ctx context.Context, id int) error {
 	}
 	if product == nil {
 		return ErrProductNotFound
+	}
+
+	// Удаляем файл, если это локальный файл
+	if product.ImageURL != nil && strings.HasPrefix(*product.ImageURL, "/uploads/") {
+		// Преобразуем относительный путь в абсолютный (нужно знать uploadPath)
+		// Здесь можно передать uploadPath из конфига через usecase
+		filePath := filepath.Join(uc.uploadPath, strings.TrimPrefix(*product.ImageURL, "/uploads"))
+		os.Remove(filePath)
 	}
 
 	// Удаляем продукт

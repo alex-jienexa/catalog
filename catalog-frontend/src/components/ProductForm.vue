@@ -492,4 +492,14 @@ export default {
   font-size: 12px;
   margin-top: 5px;
 }
+
+@media (max-width: 480px) {
+  .modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+  .modal-form {
+    padding: 15px;
+  }
+}
 </style>

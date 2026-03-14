@@ -319,4 +319,14 @@ export default {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (max-width: 480px) {
+  .modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+  .modal-form {
+    padding: 15px;
+  }
+}
 </style>

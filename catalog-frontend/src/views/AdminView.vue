@@ -626,9 +626,11 @@ export default {
 
 .products-table {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .products-table table {
+  min-width: 600px;
   width: 100%;
   border-collapse: collapse;
 }
@@ -884,6 +886,11 @@ export default {
   .sections-grid,
   .contacts-grid {
     grid-template-columns: 1fr;
+  }
+
+  .section-card,
+  .contact-card {
+    padding: 15px;
   }
   
   .contact-card {

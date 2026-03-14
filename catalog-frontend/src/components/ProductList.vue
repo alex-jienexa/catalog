@@ -297,4 +297,31 @@ watch(() => props.sortBy, () => {
     padding: 15px;
   }
 }
+
+@media (max-width: 480px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .product-card {
+    max-width: 100%;
+  }
+
+  .product-image {
+    height: 180px;
+  }
+
+    .product-name {
+    font-size: 16px;
+  }
+
+  .product-price {
+    font-size: 18px;
+  }
+  
+  .product-info {
+    padding: 15px;
+  }
+}
 </style>

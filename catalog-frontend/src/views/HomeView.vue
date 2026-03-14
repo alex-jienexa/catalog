@@ -1,12 +1,24 @@
 <template>
   <div class="home">
     <Sidebar
+      v-if="!isMobile"
       :selected-section="selectedSection"
       @section-change="handleSectionChange"
       @sort-change="handleSortChange"
       @search="handleSearch"
     />
-    <main class="main-content">
+    <MobileFilters
+      v-else
+      :sections="sections"
+      :selected-section="selectedSection"
+      :sort-by="sortBy"
+      :search-query="searchQuery"
+      @section-change="handleSectionChange"
+      @sort-change="handleSortChange"
+      @search="handleSearch"
+    />
+
+    <main class="main-content" :class="{ 'mobile': isMobile }">
       <ProductList
         :section-id="selectedSection"
         :sort-by="sortBy"
@@ -19,15 +31,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import ProductList from '@/components/ProductList.vue'
+import MobileFilters from '@/components/MobileFilters.vue'
 import { sectionAPI } from '@/services/api'
 
 const selectedSection = ref(null)
 const sortBy = ref('created_at')
 const searchQuery = ref('')
 const sections = ref([])
+const isMobile = ref(window.innerWidth <= 768)
 
 console.log('HomeView инициализирован')
 
@@ -65,6 +79,28 @@ const handlePageChange = (page) => {
   // Можно добавить скролл к началу списка
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+  if (!isMobile.value) sidebarOpen.value = false
+}
+
+onMounted(() => {
+  window.addEventListener('resize', checkMobile)
+  loadSections()
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
+const loadSections = async () => {
+  try {
+    const response = await sectionAPI.getAll(true)
+    sections.value = response.data || []
+  } catch (error) {
+    console.error('Ошибка загрузки разделов:', error)
+  }
+}
 </script>
 
 <style scoped>
@@ -81,11 +117,12 @@ const handlePageChange = (page) => {
   min-height: calc(100vh - 70px);
 }
 
+.main-content.mobile {
+  margin-left: 0;
+  padding: 10px;
+}
+
 @media (max-width: 768px) {
-  .main-content {
-    margin-left: 0;
-  }
-  
   .home {
     flex-direction: column;
   }

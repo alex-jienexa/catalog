@@ -35,12 +35,20 @@ const checkMobile = () => {
   if (!isMobile.value) mobileNavOpen.value = false
 }
 
+const handleScroll = () => {
+  if (mobileNavOpen.value) {
+    closeNav()
+  }
+}
+
 onMounted(() => {
   window.addEventListener('resize', checkMobile)
+  window.addEventListener('scroll', handleScroll)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
+  window.removeEventListener('scroll', handleScroll)
 })
 
 const toggleNav = () => {
@@ -61,10 +69,11 @@ router.afterEach(() => {
   background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1rem 0;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 101;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 

@@ -96,7 +96,7 @@ const showContactModal = ref(false)
 
 const mainImageSrc = computed(() => {
   if (!product.value?.image_url) {
-    return 'https://via.placeholder.com/500x400?text=Нет+фото'
+    return 'https://placehold.co/500x400?text=Нет+фото'
   }
   if (product.value.image_url.startsWith('http')) {
     return product.value.image_url
@@ -163,7 +163,7 @@ const formatDate = (dateString) => {
 }
 
 const handleImageError = (event) => {
-  event.target.src = 'https://via.placeholder.com/500x400?text=Нет+фото'
+  event.target.src = 'https://placehold.co/500x400?text=Нет+фото'
 }
 
 const goToProduct = (id) => {

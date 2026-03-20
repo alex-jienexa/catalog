@@ -107,6 +107,7 @@ router.afterEach(() => {
   padding: 0.5rem 1rem;
   border-radius: 4px;
   transition: all 0.3s ease;
+  margin: 0 20px;
 }
 
 .nav-link:hover {

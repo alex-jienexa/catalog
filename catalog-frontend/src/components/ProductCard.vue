@@ -59,7 +59,7 @@ const showContact = ref(false)
 
 const image_src = computed(() => {
   if (!props.product.image_url) {
-    return 'https://via.placeholder.com/300x200?text=Нет+фото'
+    return 'https://placehold.co/600x400?text=Нет+фото'
   }
   // Если путь уже абсолютный (начинается с http), используем как есть
   if (props.product.image_url.startsWith('http')) {
@@ -98,7 +98,7 @@ const truncateDescription = (description) => {
 
 const handleImageError = (event) => {
   console.error('Ошибка загрузки изображения:', props.product.image_url)
-  event.target.src = 'https://via.placeholder.com/300x200?text=Нет+фото'
+  event.target.src = 'https://placehold.co/600x400?text=Нет+фото'
 }
 
 const goToProduct = () => {

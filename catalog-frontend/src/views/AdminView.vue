@@ -59,7 +59,7 @@
                 <td>
                   <div class="product-info-cell">
                     <img 
-                      :src="product.image_url || 'https://via.placeholder.com/40x40?text=Нет+фото'" 
+                      :src="product.image_url || 'https://placehold.co/40x40/EEE/31343C?font=poppins&text=?'" 
                       :alt="product.name"
                       class="product-thumb"
                       @error="handleImageError"
@@ -335,7 +335,7 @@ export default {
     }
 
     const handleImageError = (event) => {
-      event.target.src = 'https://via.placeholder.com/40x40?text=Нет+фото'
+      event.target.src = 'https://placehold.co/40x40/EEE/31343C?font=poppins&text=?'
     }
 
     // Управление вкладками

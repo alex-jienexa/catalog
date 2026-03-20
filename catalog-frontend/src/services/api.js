@@ -37,6 +37,11 @@ export const contactAPI = {
     api.get('/public/contacts', { params: { active_only: activeOnly } }),
 };
 
+export const storeAPI = {
+    get: () => api.get('/public/store-info'),
+    update: (data) => adminAPI.putStoreInfo(data),
+};
+
 // Административные запросы
 export const adminAPI = {
   // Товары
@@ -53,6 +58,8 @@ export const adminAPI = {
   createContact: (contact) => api.post('/admin/contacts', contact),
   updateContact: (id, contact) => api.put(`/admin/contacts/${id}`, contact),
   deleteContact: (id) => api.delete(`/admin/contacts/${id}`),
+
+  putStoreInfo: (data) => api.put('/admin/store-info', data),
 };
 
 // Аутентификация (простая - только для админки)
@@ -140,6 +147,8 @@ export const admin = {
     }
     return adminAPI.deleteContact(id);
   },
+
+
 
   uploadProductImage: (id, formData, onProgress) => {
     return api.post(`/admin/products/${id}/image`, formData, {

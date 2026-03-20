@@ -1,66 +1,48 @@
 <template>
   <div class="about">
     <div class="container">
-      <!-- Информация о магазине -->
-      <section class="store-info">
-        <h1 class="title">О нашем магазине</h1>
-        
-        <div class="info-card">
-          <div class="info-content">
-            <h2>🛒 Добро пожаловать в наш каталог!</h2>
-            <p>
-              Мы - современный онлайн-магазин, который предлагает широкий ассортимент товаров 
-              различных категорий. Наша цель - сделать покупки удобными и доступными для каждого.
-            </p>
-            
-            <div class="features">
-              <div class="feature">
-                <div class="feature-icon">⭐</div>
-                <div class="feature-text">
-                  <h3>Качество товаров</h3>
-                  <p>Все товары проходят тщательную проверку перед публикацией</p>
-                </div>
-              </div>
+      <div v-if="loading_storeInfo" class="loading">
+        <div class="spinner"></div>
+        <p>Загрузка...</p>
+      </div>
+      <div v-else>
+        <!-- Информация о магазине -->
+        <section class="store-info">
+          <h1 class="title">О нашем магазине</h1>
+          
+          <div class="info-card">
+            <div class="info-content">
+              <h2>{{ storeInfo.title }}</h2>
+              <p>
+                {{ storeInfo.description }}
+              </p>
               
-              <div class="feature">
-                <div class="feature-icon">🚚</div>
-                <div class="feature-text">
-                  <h3>Быстрая доставка</h3>
-                  <p>Отправляем товары в день заказа по всей стране</p>
-                </div>
-              </div>
-              
-              <div class="feature">
-                <div class="feature-icon">💬</div>
-                <div class="feature-text">
-                  <h3>Поддержка 24/7</h3>
-                  <p>Наша служба поддержки всегда готова помочь вам</p>
-                </div>
-              </div>
-              
-              <div class="feature">
-                <div class="feature-icon">🔄</div>
-                <div class="feature-text">
-                  <h3>Легкий возврат</h3>
-                  <p>Простая процедура возврата товара в течение 14 дней</p>
+              <div v-if="storeInfo.features && storeInfo.features.length" class="features">
+                <div v-for="feature in storeInfo.features" :key="feature.id" class="feature">
+                  <div class="feature-icon">{{ feature.icon }}</div>
+                  <div class="feature-text">
+                    <h3>{{ feature.title }}</h3>
+                    <p>{{ feature.description }}</p>
+                  </div>
                 </div>
               </div>
             </div>
+            
+            <div v-if="storeInfo.image_url" class="info-image">
+              <img :src="storeInfo.image_url" 
+                  alt="Магазин" />
+            </div>
           </div>
-          
-          <div class="info-image">
-            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80" 
-                 alt="Магазин" />
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
+      
       
       <!-- Контакты -->
       <section class="contacts-section">
         <h2 class="section-title">📞 Свяжитесь с нами</h2>
         <p class="section-subtitle">Выберите удобный способ связи</p>
         
-        <div v-if="loading" class="loading">
+        <div v-if="loading_contacts" class="loading">
           <div class="spinner"></div>
           <p>Загрузка контактов...</p>
         </div>
@@ -115,16 +97,34 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { contactAPI } from '@/services/api'
+import { contactAPI, storeAPI } from '@/services/api'
 
+const storeInfo = ref({
+  title: '',
+  description: '',
+  image_url: '',
+  features: []
+})
 const contacts = ref([])
-const loading = ref(false)
+const loading_contacts = ref(false)
+const loading_storeInfo = ref(false)
+
+const loadStoreInfo = async () => {
+  loading_storeInfo.value = true
+  try {
+    const res = await storeAPI.get()
+    storeInfo.value = res.data
+  } catch (err) {
+    console.error("Ошибка загрузки данных о магазине:", err)
+  } finally {
+    loading_storeInfo.value = false
+  }
+}
 
 const loadContacts = async () => {
-  loading.value = true
+  loading_contacts.value = true
   try {
-    // Загружаем все контакты, включая неактивные
-    const response = await contactAPI.getAll()
+    const response = await contactAPI.getAll(true)
     if (response.data != null) {
         contacts.value = response.data
     }
@@ -132,7 +132,7 @@ const loadContacts = async () => {
     console.error('Ошибка загрузки контактов:', error)
     contacts.value = []
   } finally {
-    loading.value = false
+    loading_contacts.value = false
   }
 }
 
@@ -161,6 +161,7 @@ const getContactDisplay = (url) => {
 
 onMounted(() => {
   loadContacts()
+  loadStoreInfo()
 })
 </script>
 
@@ -214,6 +215,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  margin-top: 30px;
 }
 
 .feature {

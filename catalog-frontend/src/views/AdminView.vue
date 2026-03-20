@@ -191,6 +191,11 @@
           </div>
         </div>
       </div>
+
+      <!-- Вкладка информации о магазине -->
+      <div v-else-if="activeTab === 'store'" class="tab-content">
+        <StoreInfoForm />
+      </div>
     </div>
 
     <!-- Модальные окна -->
@@ -231,13 +236,15 @@ import { admin, auth, productAPI, sectionAPI, contactAPI } from '@/services/api'
 import ProductForm from '@/components/ProductForm.vue'
 import SectionForm from '@/components/SectionForm.vue'
 import ContactForm from '@/components/ContactForm.vue'
+import StoreInfoForm from '@/components/StoreInfoForm.vue'
 
 export default {
   name: 'AdminView',
   components: {
     ProductForm,
     SectionForm,
-    ContactForm
+    ContactForm,
+    StoreInfoForm,
   },
   
   setup() {
@@ -258,7 +265,8 @@ export default {
     const tabs = [
       { id: 'products', label: 'Товары' },
       { id: 'sections', label: 'Разделы' },
-      { id: 'contacts', label: 'Контакты' }
+      { id: 'contacts', label: 'Контакты' },
+      { id: 'store', label: 'О магазине' }
     ]
     
     const activeTab = ref('products')

@@ -13,6 +13,7 @@ type Router struct {
 	sectionHandler *handler.SectionHandler
 	contactHandler *handler.ContactHandler
 	uploadHandler  *handler.UploadHandler
+	storeHandler   *handler.StoreHandler
 }
 
 func NewRouter(
@@ -20,12 +21,14 @@ func NewRouter(
 	sectionUC *usecase.SectionUseCase,
 	contactUC *usecase.ContactUseCase,
 	uploadCfg *config.UploadConfig,
+	storeUC *usecase.StoreUseCase,
 ) *Router {
 	return &Router{
 		productHandler: handler.NewProductHandler(productUC),
 		sectionHandler: handler.NewSectionHandler(sectionUC),
 		contactHandler: handler.NewContactHandler(contactUC),
 		uploadHandler:  handler.NewUploadHandler(productUC, uploadCfg.Path, uploadCfg.MaxSize),
+		storeHandler:   handler.NewStoreHandler(storeUC),
 	}
 }
 
@@ -41,6 +44,7 @@ func (r *Router) SetupRoutes(engine *gin.Engine, config *config.Config) {
 		public.GET("/sections", r.sectionHandler.GetSections)
 		public.GET("/sections/:id", r.sectionHandler.GetSection)
 		public.GET("/contacts", r.contactHandler.GetContacts)
+		public.GET("/store-info", r.storeHandler.GetStoreInfo)
 	}
 
 	// Административные маршруты (для управления)
@@ -59,6 +63,8 @@ func (r *Router) SetupRoutes(engine *gin.Engine, config *config.Config) {
 		admin.DELETE("/contacts/:id", r.contactHandler.DeleteContact)
 
 		admin.POST("/products/:id/image", r.uploadHandler.UploadProductImage)
+
+		admin.PUT("/store-info", r.storeHandler.UpdateStoreInfo)
 	}
 
 	engine.Static("/uploads", config.Upload.Path)

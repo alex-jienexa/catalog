@@ -22,7 +22,9 @@
           type="text"
           required
           placeholder="🛒 Добро пожаловать в наш каталог!"
+          :class="{ 'error-input': validationErrors.title }"
         />
+        <span v-if="validationErrors.title" class="error-message">Заголовок обязателен</span>
       </div>
 
       <!-- Описание -->
@@ -34,18 +36,34 @@
           rows="4"
           required
           placeholder="Мы - современный онлайн-магазин, который предлагает широкий ассортимент товаров..."
+          :class="{ 'error-input': validationErrors.description }"
         ></textarea>
+        <span v-if="validationErrors.description" class="error-message">Описание обязательно</span>
       </div>
 
-      <!-- URL изображения -->
+      <!-- Изображение -->
       <div class="form-group">
-        <label for="image_url">URL изображения</label>
-        <input
-          id="image_url"
-          v-model="store.image_url"
-          type="text"
-          placeholder="https://example.com/store-image.jpg"
-        />
+        <label>Изображение</label>
+        <div class="image-url-row">
+          <input
+            v-model="store.image_url"
+            type="text"
+            placeholder="https://example.com/store-image.jpg"
+            :disabled="uploadingImage"
+          />
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            @change="handleFileSelect"
+            ref="fileInput"
+            :disabled="uploadingImage"
+          />
+        </div>
+        <div v-if="uploadProgress > 0" class="progress">
+          <div class="progress-bar" :style="{ width: uploadProgress + '%' }"></div>
+          <span class="progress-text">{{ uploadProgress }}%</span>
+        </div>
+        <div v-if="uploadError" class="error-message">{{ uploadError }}</div>
         <div v-if="store.image_url" class="image-preview">
           <img :src="store.image_url" alt="Preview" />
         </div>
@@ -117,6 +135,18 @@ const store = ref({
 const loadingData = ref(false)
 const loading = ref(false)
 
+// Валидация
+const validationErrors = ref({
+  title: false,
+  description: false
+})
+
+// Загрузка изображения
+const uploadingImage = ref(false)
+const uploadProgress = ref(0)
+const uploadError = ref('')
+const fileInput = ref(null)
+
 // Для модального окна функций
 const showFeatureModal = ref(false)
 const editingFeatureIndex = ref(-1)
@@ -144,8 +174,21 @@ const loadStore = async () => {
   }
 }
 
+// Валидация формы
+const validateForm = () => {
+  validationErrors.value = {
+    title: !store.value.title.trim(),
+    description: !store.value.description.trim()
+  }
+  return !validationErrors.value.title && !validationErrors.value.description
+}
+
 // Сохранение
 const saveStore = async () => {
+  if (!validateForm()) {
+    return
+  }
+
   loading.value = true
   try {
     // Подготовка данных: image_url может быть пустой строкой – отправляем null
@@ -209,6 +252,46 @@ const closeFeatureModal = () => {
   featureForm.value = { icon: '', title: '', description: '' }
 }
 
+// Загрузка изображения
+const handleFileSelect = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    uploadError.value = 'Допустимые форматы: JPEG, PNG, GIF, WEBP'
+    fileInput.value.value = ''
+    return
+  }
+  const maxSize = 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    uploadError.value = 'Файл слишком большой. Максимум 10MB'
+    fileInput.value.value = ''
+    return
+  }
+
+  uploadError.value = ''
+  uploadingImage.value = true
+  uploadProgress.value = 0
+
+  const formData = new FormData()
+  formData.append('image', file)
+
+  try {
+    const response = await storeAPI.uploadStoreImage(formData, (progress) => {
+      uploadProgress.value = progress
+    })
+    store.value.image_url = response.data.image_url
+    uploadProgress.value = 0
+  } catch (error) {
+    console.error('Ошибка загрузки изображения:', error)
+    uploadError.value = 'Не удалось загрузить изображение: ' + (error.response?.data?.error || error.message)
+  } finally {
+    uploadingImage.value = false
+    fileInput.value.value = ''
+  }
+}
+
 onMounted(() => {
   loadStore()
 })
@@ -261,6 +344,204 @@ onMounted(() => {
 .image-preview img {
   max-width: 300px;
   max-height: 200px;
+  border-radius: 4px;
+}
+.features-section {
+  margin-top: 30px;
+}
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.feature-card {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  gap: 15px;
+}
+.feature-icon {
+  font-size: 32px;
+  width: 60px;
+  text-align: center;
+}
+.feature-content {
+  flex: 1;
+}
+.feature-content h4 {
+  margin: 0 0 5px 0;
+}
+.feature-content p {
+  margin: 0;
+  color: #666;
+}
+.feature-actions {
+  display: flex;
+  gap: 5px;
+}
+.add-feature-btn {
+  background: #f0f0f0;
+  border: 1px dashed #999;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.edit-btn, .delete-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+.edit-btn {
+  background: #ffeaa7;
+}
+.delete-btn {
+  background: #ffcccc;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal {
+  background: white;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+.modal-body {
+  padding: 20px;
+}
+.modal-footer {
+  padding: 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.btn-primary {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.store-editor {
+  padding: 20px;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+.save-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.store-form {
+  max-width: 800px;
+}
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+.has-error .error-input {
+  border-color: #ff6b6b;
+  background-color: #fff5f5;
+}
+.error-message {
+  color: #ff6b6b;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+.image-url-row {
+  display: flex;
+  gap: 10px;
+}
+.image-url-row input:first-child {
+  flex: 1;
+}
+.image-url-row input[type="file"] {
+  width: auto;
+  flex-shrink: 0;
+}
+.progress {
+  margin-top: 10px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  height: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.progress-bar {
+  background: #667eea;
+  height: 100%;
+  transition: width 0.3s;
+}
+.progress-text {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #333;
+  font-size: 12px;
+  line-height: 20px;
+}
+.image-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  margin-top: 10px;
   border-radius: 4px;
 }
 .features-section {

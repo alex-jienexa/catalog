@@ -9,11 +9,12 @@ import (
 )
 
 type Router struct {
-	productHandler *handler.ProductHandler
-	sectionHandler *handler.SectionHandler
-	contactHandler *handler.ContactHandler
-	uploadHandler  *handler.UploadHandler
-	storeHandler   *handler.StoreHandler
+	productHandler    *handler.ProductHandler
+	sectionHandler    *handler.SectionHandler
+	contactHandler    *handler.ContactHandler
+	uploadHandler     *handler.UploadHandler
+	storeHandler      *handler.StoreHandler
+	StoreImageHandler *handler.StoreImageHandler
 }
 
 func NewRouter(
@@ -24,11 +25,12 @@ func NewRouter(
 	storeUC *usecase.StoreUseCase,
 ) *Router {
 	return &Router{
-		productHandler: handler.NewProductHandler(productUC),
-		sectionHandler: handler.NewSectionHandler(sectionUC),
-		contactHandler: handler.NewContactHandler(contactUC),
-		uploadHandler:  handler.NewUploadHandler(productUC, uploadCfg.Path, uploadCfg.MaxSize),
-		storeHandler:   handler.NewStoreHandler(storeUC),
+		productHandler:    handler.NewProductHandler(productUC),
+		sectionHandler:    handler.NewSectionHandler(sectionUC),
+		contactHandler:    handler.NewContactHandler(contactUC),
+		uploadHandler:     handler.NewUploadHandler(productUC, uploadCfg.Path, uploadCfg.MaxSize),
+		storeHandler:      handler.NewStoreHandler(storeUC),
+		StoreImageHandler: handler.NewStoreImageHandler(storeUC, uploadCfg.Path, uploadCfg.MaxSize),
 	}
 }
 
@@ -65,6 +67,7 @@ func (r *Router) SetupRoutes(engine *gin.Engine, config *config.Config) {
 		admin.POST("/products/:id/image", r.uploadHandler.UploadProductImage)
 
 		admin.PUT("/store-info", r.storeHandler.UpdateStoreInfo)
+		admin.POST("/store/image", r.StoreImageHandler.UploadStoreImage)
 	}
 
 	engine.Static("/uploads", config.Upload.Path)

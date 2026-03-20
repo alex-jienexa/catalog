@@ -40,6 +40,17 @@ export const contactAPI = {
 export const storeAPI = {
     get: () => api.get('/public/store-info'),
     update: (data) => adminAPI.putStoreInfo(data),
+    uploadStoreImage: (formData, onProgress) => {
+      return api.post('/admin/store/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress?.(percentCompleted);
+          }
+        }
+      });
+    }
 };
 
 // Административные запросы

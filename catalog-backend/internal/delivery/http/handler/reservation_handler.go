@@ -50,3 +50,24 @@ func (h *ReservationHandler) GetReservations(c *gin.Context) {
 		"limit":        limit,
 	})
 }
+
+func (h *ReservationHandler) UpdateReservationStatus(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+	var req struct {
+		Status string `json:"status"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	reservation, err := h.reservationUC.UpdateReservationStatus(c.Request.Context(), id, req.Status)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, reservation)
+}

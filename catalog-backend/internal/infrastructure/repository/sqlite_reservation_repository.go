@@ -49,20 +49,41 @@ func (r *sqliteReservationRepository) Count(ctx context.Context) (int, error) {
 
 func (r *sqliteReservationRepository) GetWithDetails(ctx context.Context, limit, offset int) ([]repository.ReservationWithDetails, error) {
 	query := `
-		SELECT 
-			r.id, r.customer_id, r.product_id, r.status, r.created_at, r.updated_at,
-			c.first_name as customer_first_name, c.last_name as customer_last_name, c.phone as customer_phone,
-			p.name as product_name, p.price as product_price
-		FROM reservations r
-		JOIN customers c ON r.customer_id = c.id
-		JOIN products p ON r.product_id = p.id
-		ORDER BY r.created_at DESC
-		LIMIT ? OFFSET ?
-	`
+        SELECT 
+            r.id, r.customer_id, r.product_id, r.status, r.created_at, r.updated_at,
+            c.first_name as customer_first_name, 
+            c.last_name as customer_last_name, 
+            c.phone as customer_phone,
+            p.name as product_name, 
+            p.price as product_price
+        FROM reservations r
+        LEFT JOIN customers c ON r.customer_id = c.id
+        LEFT JOIN products p ON r.product_id = p.id
+        ORDER BY 
+            CASE r.status 
+                WHEN 'pending' THEN 1 
+                WHEN 'contacted' THEN 2 
+                WHEN 'completed' THEN 3 
+                ELSE 4 
+            END,
+            c.id,
+            r.created_at ASC
+        LIMIT ? OFFSET ?
+    `
 	var results []repository.ReservationWithDetails
 	err := r.db.SelectContext(ctx, &results, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get reservations with details: %w", err)
 	}
 	return results, nil
+}
+
+func (r *sqliteReservationRepository) UpdateStatus(ctx context.Context, id int, status string) (*entity.Reservation, error) {
+	query := `UPDATE reservations SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *`
+	var updated entity.Reservation
+	err := r.db.QueryRowxContext(ctx, query, status, id).StructScan(&updated)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update reservation status: %w", err)
+	}
+	return &updated, nil
 }

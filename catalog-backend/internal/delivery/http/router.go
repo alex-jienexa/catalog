@@ -78,6 +78,7 @@ func (r *Router) SetupRoutes(engine *gin.Engine, config *config.Config) {
 		admin.POST("/store/image", r.StoreImageHandler.UploadStoreImage)
 
 		admin.GET("/reservations", r.reservationHandler.GetReservations)
+		admin.PUT("/reservations/:id", r.reservationHandler.UpdateReservationStatus)
 	}
 
 	engine.Static("/uploads", config.Upload.Path)

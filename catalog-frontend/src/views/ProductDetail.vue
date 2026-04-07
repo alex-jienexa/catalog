@@ -43,9 +43,14 @@
             <p v-else class="no-description">Описание отсутствует</p>
           </div>
           
-          <!-- <button @click="showContactModal = true" class="contact-seller-btn">
-            Связаться с продавцом
-          </button> -->
+          <button @click.stop="showBookingModal = true" class="contact-seller-btn">
+            📦 Хочу забрать товар
+          </button>
+          <BookingModal 
+            :visible="showBookingModal" 
+            :product-id="product.id" 
+            @close="showBookingModal = false"
+          />
           
           <div class="seller-info">
             <h3>Информация о связи</h3>
@@ -86,6 +91,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { productAPI, sectionAPI } from '@/services/api'
+import BookingModal from '@/components/BookingModal.vue'
 
 const route = useRoute()
 const product = ref(null)
@@ -93,6 +99,7 @@ const sections = ref([])
 const similarProducts = ref([])
 const loading = ref(true)
 const showContactModal = ref(false)
+const showBookingModal = ref(false)
 
 const mainImageSrc = computed(() => {
   if (!product.value?.image_url) {

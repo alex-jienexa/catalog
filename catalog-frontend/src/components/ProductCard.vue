@@ -23,13 +23,7 @@
           {{ formatDate(product.created_at) }}
         </span>
       </div>
-      <button 
-        v-if="showContactButton" 
-        @click.stop="showContact = true"
-        class="contact-btn"
-      >
-        Связаться с продавцом
-      </button>
+      <button @click="$emit('book')" class="contact-btn">📦 Хочу забрать товар</button>
     </div>
   </div>
 </template>
@@ -47,15 +41,10 @@ const props = defineProps({
   sections: {
     type: Array,
     default: () => []
-  },
-  showContactButton: {
-    type: Boolean,
-    default: true
   }
 })
 
 const router = useRouter()
-const showContact = ref(false)
 
 const image_src = computed(() => {
   if (!props.product.image_url) {

@@ -18,6 +18,7 @@
         :key="product.id"
         :product="product"
         :sections="sections"
+        @book="openBookingModal(product.id)"
       />
     </div>
     
@@ -50,6 +51,7 @@
 import { ref, watch, computed, onMounted } from 'vue'
 import ProductCard from './ProductCard.vue'
 import { productAPI } from '@/services/api'
+import BookingModal from '@/components/BookingModal.vue'
 
 const props = defineProps({
   sectionId: {
@@ -76,6 +78,14 @@ const products = ref([])
 const loading = ref(false)
 const currentPage = ref(1)
 const totalItems = ref(0)
+
+const bookingModalVisible = ref(false)
+const selectedProductId = ref(null)
+
+const openBookingModal = (productId) => {
+  selectedProductId.value = productId
+  bookingModalVisible.value = true
+}
 
 // Параметры запроса
 const limit = 12

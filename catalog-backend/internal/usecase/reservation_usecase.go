@@ -51,3 +51,12 @@ func (uc *ReservationUseCase) GetReservations(ctx context.Context, page, limit i
 	}
 	return reservations, total, nil
 }
+
+func (uc *ReservationUseCase) UpdateReservationStatus(ctx context.Context, id int, status string) (*entity.Reservation, error) {
+	// Валидация статуса
+	allowed := map[string]bool{"pending": true, "contacted": true, "completed": true}
+	if !allowed[status] {
+		return nil, errors.New("invalid status")
+	}
+	return uc.reservationRepo.UpdateStatus(ctx, id, status)
+}

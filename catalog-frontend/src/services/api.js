@@ -37,6 +37,16 @@ export const contactAPI = {
     api.get('/public/contacts', { params: { active_only: activeOnly } }),
 };
 
+export const customerAPI = {
+  getOrCreate: (data) => api.post('/public/customers', data)
+}
+
+export const reservationAPI = {
+  create: (data) => api.post('/public/reservations', data),
+  getAll: (params) => api.get('/admin/reservations', { params }),
+  updateStatus: (id, data) => api.put(`/admin/reservations/${id}`, data)
+}
+
 export const storeAPI = {
     get: () => api.get('/public/store-info'),
     update: (data) => adminAPI.putStoreInfo(data),

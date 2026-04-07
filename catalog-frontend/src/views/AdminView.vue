@@ -196,6 +196,10 @@
       <div v-else-if="activeTab === 'store'" class="tab-content">
         <StoreInfoForm />
       </div>
+
+      <div v-else-if="activeTab === 'reservations'" class="tab-content">
+        <ReservationsList />
+      </div>
     </div>
 
     <!-- Модальные окна -->
@@ -237,6 +241,7 @@ import ProductForm from '@/components/ProductForm.vue'
 import SectionForm from '@/components/SectionForm.vue'
 import ContactForm from '@/components/ContactForm.vue'
 import StoreInfoForm from '@/components/StoreInfoForm.vue'
+import ReservationsList from '@/components/ReservationsList.vue'
 
 export default {
   name: 'AdminView',
@@ -245,6 +250,7 @@ export default {
     SectionForm,
     ContactForm,
     StoreInfoForm,
+    ReservationsList,
   },
   
   setup() {
@@ -266,7 +272,8 @@ export default {
       { id: 'products', label: 'Товары' },
       { id: 'sections', label: 'Разделы' },
       { id: 'contacts', label: 'Контакты' },
-      { id: 'store', label: 'О магазине' }
+      { id: 'store', label: 'О магазине' },
+      { id: 'reservations', label: 'Бронирования' }
     ]
     
     const activeTab = ref('products')

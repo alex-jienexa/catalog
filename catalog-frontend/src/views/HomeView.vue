@@ -26,6 +26,11 @@
         :sections="sections"
         @page-change="handlePageChange"
       />
+      <BookingModal
+        :visible="bookingModalVisible"
+        :product-id="selectedProductId"
+        @close="bookingModalVisible = false"
+      />
     </main>
   </div>
 </template>
@@ -36,6 +41,7 @@ import Sidebar from '@/components/Sidebar.vue'
 import ProductList from '@/components/ProductList.vue'
 import MobileFilters from '@/components/MobileFilters.vue'
 import { sectionAPI } from '@/services/api'
+import BookingModal from '@/components/BookingModal.vue'
 
 const selectedSection = ref(null)
 const sortBy = ref('created_at')

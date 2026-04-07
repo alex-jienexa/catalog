@@ -9,12 +9,14 @@ import (
 )
 
 type Router struct {
-	productHandler    *handler.ProductHandler
-	sectionHandler    *handler.SectionHandler
-	contactHandler    *handler.ContactHandler
-	uploadHandler     *handler.UploadHandler
-	storeHandler      *handler.StoreHandler
-	StoreImageHandler *handler.StoreImageHandler
+	productHandler     *handler.ProductHandler
+	sectionHandler     *handler.SectionHandler
+	contactHandler     *handler.ContactHandler
+	uploadHandler      *handler.UploadHandler
+	storeHandler       *handler.StoreHandler
+	StoreImageHandler  *handler.StoreImageHandler
+	customerHandler    *handler.CustomerHandler
+	reservationHandler *handler.ReservationHandler
 }
 
 func NewRouter(
@@ -23,14 +25,18 @@ func NewRouter(
 	contactUC *usecase.ContactUseCase,
 	uploadCfg *config.UploadConfig,
 	storeUC *usecase.StoreUseCase,
+	customerUC *usecase.CustomerUseCase,
+	reservationUC *usecase.ReservationUseCase,
 ) *Router {
 	return &Router{
-		productHandler:    handler.NewProductHandler(productUC),
-		sectionHandler:    handler.NewSectionHandler(sectionUC),
-		contactHandler:    handler.NewContactHandler(contactUC),
-		uploadHandler:     handler.NewUploadHandler(productUC, uploadCfg.Path, uploadCfg.MaxSize),
-		storeHandler:      handler.NewStoreHandler(storeUC),
-		StoreImageHandler: handler.NewStoreImageHandler(storeUC, uploadCfg.Path, uploadCfg.MaxSize),
+		productHandler:     handler.NewProductHandler(productUC),
+		sectionHandler:     handler.NewSectionHandler(sectionUC),
+		contactHandler:     handler.NewContactHandler(contactUC),
+		uploadHandler:      handler.NewUploadHandler(productUC, uploadCfg.Path, uploadCfg.MaxSize),
+		storeHandler:       handler.NewStoreHandler(storeUC),
+		StoreImageHandler:  handler.NewStoreImageHandler(storeUC, uploadCfg.Path, uploadCfg.MaxSize),
+		customerHandler:    handler.NewCustomerHandler(customerUC),
+		reservationHandler: handler.NewReservationHandler(reservationUC),
 	}
 }
 
@@ -47,6 +53,8 @@ func (r *Router) SetupRoutes(engine *gin.Engine, config *config.Config) {
 		public.GET("/sections/:id", r.sectionHandler.GetSection)
 		public.GET("/contacts", r.contactHandler.GetContacts)
 		public.GET("/store-info", r.storeHandler.GetStoreInfo)
+		public.POST("/customers", r.customerHandler.GetOrCreate)
+		public.POST("/reservations", r.reservationHandler.CreateReservation)
 	}
 
 	// Административные маршруты (для управления)
@@ -68,6 +76,8 @@ func (r *Router) SetupRoutes(engine *gin.Engine, config *config.Config) {
 
 		admin.PUT("/store-info", r.storeHandler.UpdateStoreInfo)
 		admin.POST("/store/image", r.StoreImageHandler.UploadStoreImage)
+
+		admin.GET("/reservations", r.reservationHandler.GetReservations)
 	}
 
 	engine.Static("/uploads", config.Upload.Path)

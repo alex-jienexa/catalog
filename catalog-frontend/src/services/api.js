@@ -49,7 +49,7 @@ export const reservationAPI = {
 
 export const storeAPI = {
     get: () => api.get('/public/store-info'),
-    update: (data) => adminAPI.putStoreInfo(data),
+    update: (data) => api.put('/admin/store-info', data),
     uploadStoreImage: (formData, onProgress) => {
       return api.post('/admin/store/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },

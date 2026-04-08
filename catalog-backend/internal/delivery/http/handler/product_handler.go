@@ -108,7 +108,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		"pages":    (total + limit - 1) / limit,
 	}
 
-	logger.Debug("GetProduts: получено %d продуктов: %+v", len(products), products)
+	logger.Debug("GetProducts: получено %d продуктов: %+v", len(products), products)
 	c.JSON(http.StatusOK, response)
 }
 

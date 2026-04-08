@@ -4,6 +4,7 @@ import (
 	"catalog-backend/internal/domain/entity"
 	"catalog-backend/internal/domain/repository"
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
@@ -52,6 +53,9 @@ func (r *sqliteProductRepository) GetByID(ctx context.Context, id int) (*entity.
 	var product entity.Product
 	err := r.db.GetContext(ctx, &product, query, id)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("failed to get product: %w", err)
 	}
 

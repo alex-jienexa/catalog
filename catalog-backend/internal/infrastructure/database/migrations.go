@@ -8,23 +8,23 @@ import (
 
 // RunMigrations выполняет все миграции
 func RunMigrations(db *sql.DB) error {
-	// Таблица customers
+	// Таблица customers (не имеет зависимостей)
 	if err := createCustomersTable(db); err != nil {
 		return err
 	}
-	// Таблица reservations
-	if err := createReservationsTable(db); err != nil {
-		return err
-	}
-	// Таблица sections
+	// Таблица sections (не имеет зависимостей)
 	if err := createSectionsTable(db); err != nil {
 		return err
 	}
-	// Таблица products
+	// Таблица products (зависит от sections)
 	if err := createProductsTable(db); err != nil {
 		return err
 	}
-	// Таблица contacts
+	// Таблица reservations (зависит от customers и products)
+	if err := createReservationsTable(db); err != nil {
+		return err
+	}
+	// Таблица contacts (не имеет зависимостей)
 	if err := createContactsTable(db); err != nil {
 		return err
 	}

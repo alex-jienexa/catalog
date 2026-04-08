@@ -50,6 +50,7 @@ func (a *App) Run() error {
 	contactRepo := infraRepo.NewSQLiteContactRepository(db)
 	customerRepo := infraRepo.NewSQLiteCustomerRepository(db)
 	reservationRepo := infraRepo.NewSQLiteReservationRepository(db)
+	adminRepo := infraRepo.NewSQLiteAdminRepository(db)
 	storeRepo := infraRepo.NewJsonStoreRepository("./data/store.json")
 	if err := storeRepo.EnsureDefault(defaultStoreInfo()); err != nil {
 		return fmt.Errorf("failed to init store file: %w", err)
@@ -62,6 +63,7 @@ func (a *App) Run() error {
 	storeUC := usecase.NewStoreUseCase(storeRepo)
 	customerUC := usecase.NewCustomerUseCase(customerRepo)
 	reservationUC := usecase.NewReservationUseCase(reservationRepo, productRepo)
+	adminUC := usecase.NewAdminUseCase(adminRepo, a.config.JWT.Secret)
 
 	// Настройка Gin
 	gin.SetMode(a.config.Server.Mode)
@@ -71,7 +73,7 @@ func (a *App) Run() error {
 	setupMiddleware(a.router)
 
 	// Настройка маршрутов
-	router := http.NewRouter(productUC, sectionUC, contactUC, &a.config.Upload, storeUC, customerUC, reservationUC)
+	router := http.NewRouter(productUC, sectionUC, contactUC, &a.config.Upload, storeUC, customerUC, reservationUC, adminUC)
 	router.SetupRoutes(a.router, a.config)
 
 	if err := http.ServeFrontend(a.router); err != nil {

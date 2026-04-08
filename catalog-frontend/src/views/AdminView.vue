@@ -2,7 +2,12 @@
   <div class="admin-view">
     <!-- Заголовок -->
     <div class="admin-header">
-      <h1>👑 Панель администратора</h1>
+      <div class="admin-header-left">
+        <h1>👑 Панель администратора</h1>
+        <span v-if="currentAdmin" class="current-admin-name">
+          Привет, {{ currentAdmin.name }}
+        </span>
+      </div>
       <button @click="logout" class="logout-btn">Выйти</button>
     </div>
 
@@ -200,6 +205,11 @@
       <div v-else-if="activeTab === 'reservations'" class="tab-content">
         <ReservationsList />
       </div>
+
+      <!-- Вкладка администраторов -->
+      <div v-else-if="activeTab === 'admins'" class="tab-content">
+        <AdminsTab />
+      </div>
     </div>
 
     <!-- Модальные окна -->
@@ -242,6 +252,7 @@ import SectionForm from '@/components/SectionForm.vue'
 import ContactForm from '@/components/ContactForm.vue'
 import StoreInfoForm from '@/components/StoreInfoForm.vue'
 import ReservationsList from '@/components/ReservationsList.vue'
+import AdminsTab from '@/components/AdminsTab.vue'
 
 export default {
   name: 'AdminView',
@@ -251,10 +262,14 @@ export default {
     ContactForm,
     StoreInfoForm,
     ReservationsList,
+    AdminsTab,
   },
   
   setup() {
     const router = useRouter()
+
+    // Данные текущего администратора
+    const currentAdmin = ref(auth.getAdminData())
 
     // Состояние
     const products = ref([])
@@ -273,7 +288,8 @@ export default {
       { id: 'sections', label: 'Разделы' },
       { id: 'contacts', label: 'Контакты' },
       { id: 'store', label: 'О магазине' },
-      { id: 'reservations', label: 'Бронирования' }
+      { id: 'reservations', label: 'Бронирования' },
+      { id: 'admins', label: '👤 Администраторы' },
     ]
     
     const activeTab = ref('products')
@@ -444,6 +460,7 @@ export default {
 
     return {
       // Данные
+      currentAdmin,
       products,
       sections,
       contacts,
@@ -498,10 +515,22 @@ export default {
   border-bottom: 2px solid #e9ecef;
 }
 
+.admin-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .admin-header h1 {
   margin: 0;
   color: #333;
   font-size: 28px;
+}
+
+.current-admin-name {
+  font-size: 14px;
+  color: #667eea;
+  font-weight: 500;
 }
 
 .logout-btn {

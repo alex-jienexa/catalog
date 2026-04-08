@@ -11,6 +11,11 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	Upload   UploadConfig
+	JWT      JWTConfig
+}
+
+type JWTConfig struct {
+	Secret string `mapstructure:"secret"`
 }
 
 type ServerConfig struct {
@@ -43,6 +48,7 @@ func LoadConfig(path string) (*Config, error) {
 	viper.SetDefault("database.path", "./catalog.db")
 	viper.SetDefault("upload.path", "./uploads")
 	viper.SetDefault("upload.max_size", 5*1024*1024) // 5 MB
+	viper.SetDefault("jwt.secret", "change-me-in-production-please")
 
 	// Пытаемся прочитать файл, если он есть
 	if err := viper.ReadInConfig(); err != nil {

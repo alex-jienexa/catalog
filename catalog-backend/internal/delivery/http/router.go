@@ -3,6 +3,7 @@ package http
 import (
 	"catalog-backend/config"
 	"catalog-backend/internal/delivery/http/handler"
+	"catalog-backend/internal/delivery/http/middleware"
 	"catalog-backend/internal/usecase"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,8 @@ type Router struct {
 	StoreImageHandler  *handler.StoreImageHandler
 	customerHandler    *handler.CustomerHandler
 	reservationHandler *handler.ReservationHandler
+	adminHandler       *handler.AdminHandler
+	adminUC            *usecase.AdminUseCase
 }
 
 func NewRouter(
@@ -27,6 +30,7 @@ func NewRouter(
 	storeUC *usecase.StoreUseCase,
 	customerUC *usecase.CustomerUseCase,
 	reservationUC *usecase.ReservationUseCase,
+	adminUC *usecase.AdminUseCase,
 ) *Router {
 	return &Router{
 		productHandler:     handler.NewProductHandler(productUC),
@@ -37,12 +41,21 @@ func NewRouter(
 		StoreImageHandler:  handler.NewStoreImageHandler(storeUC, uploadCfg.Path, uploadCfg.MaxSize),
 		customerHandler:    handler.NewCustomerHandler(customerUC),
 		reservationHandler: handler.NewReservationHandler(reservationUC),
+		adminHandler:       handler.NewAdminHandler(adminUC),
+		adminUC:            adminUC,
 	}
 }
 
 func (r *Router) SetupRoutes(engine *gin.Engine, config *config.Config) {
-	// Группа API
 	api := engine.Group("/api/v1")
+
+	// Аутентификация (публично)
+	auth := api.Group("/auth")
+	{
+		auth.GET("/is-first", r.adminHandler.IsFirstAdmin)
+		auth.POST("/register", r.adminHandler.Register)
+		auth.POST("/login", r.adminHandler.Login)
+	}
 
 	// Публичные маршруты (для клиентов)
 	public := api.Group("/public")
@@ -57,8 +70,9 @@ func (r *Router) SetupRoutes(engine *gin.Engine, config *config.Config) {
 		public.POST("/reservations", r.reservationHandler.CreateReservation)
 	}
 
-	// Административные маршруты (для управления)
+	// Административные маршруты (требуют JWT)
 	admin := api.Group("/admin")
+	admin.Use(middleware.AuthMiddleware(r.adminUC))
 	{
 		admin.POST("/products", r.productHandler.CreateProduct)
 		admin.PUT("/products/:id", r.productHandler.UpdateProduct)
@@ -79,11 +93,16 @@ func (r *Router) SetupRoutes(engine *gin.Engine, config *config.Config) {
 
 		admin.GET("/reservations", r.reservationHandler.GetReservations)
 		admin.PUT("/reservations/:id", r.reservationHandler.UpdateReservationStatus)
+
+		// Управление администраторами
+		admin.GET("/admins", r.adminHandler.GetAdmins)
+		admin.POST("/admins", r.adminHandler.CreateAdmin)
+		admin.PUT("/admins/:id", r.adminHandler.UpdateAdmin)
+		admin.DELETE("/admins/:id", r.adminHandler.DeleteAdmin)
 	}
 
 	engine.Static("/uploads", config.Upload.Path)
 
-	// Health check
 	engine.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "OK"})
 	})

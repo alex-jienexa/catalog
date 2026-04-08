@@ -8,6 +8,10 @@ import (
 
 // RunMigrations выполняет все миграции
 func RunMigrations(db *sql.DB) error {
+	// Таблица admins (не имеет зависимостей)
+	if err := createAdminsTable(db); err != nil {
+		return err
+	}
 	// Таблица customers (не имеет зависимостей)
 	if err := createCustomersTable(db); err != nil {
 		return err
@@ -33,6 +37,24 @@ func RunMigrations(db *sql.DB) error {
 		return err
 	}
 	log.Println("All migrations completed successfully")
+	return nil
+}
+
+func createAdminsTable(db *sql.DB) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS admins (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			username TEXT NOT NULL UNIQUE,
+			password_hash TEXT NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("admins table: %w", err)
+	}
 	return nil
 }
 

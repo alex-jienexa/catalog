@@ -2,15 +2,67 @@
   <div class="admin-login">
     <div class="login-container">
       <div class="login-header">
-        <h1>🔐 Вход в админ-панель</h1>
-        <p>Для доступа к управлению каталогом требуется авторизация</p>
+        <h1>{{ isFirstAdmin ? '🚀 Первый запуск' : '🔐 Вход в админ-панель' }}</h1>
+        <p v-if="isFirstAdmin">
+          Администраторов ещё нет. Создайте первого администратора.
+        </p>
+        <p v-else>
+          Для доступа к управлению каталогом требуется авторизация
+        </p>
       </div>
-      
-      <form @submit.prevent="handleLogin" class="login-form">
+
+      <!-- Форма регистрации первого администратора -->
+      <form v-if="isFirstAdmin" @submit.prevent="handleRegister" class="login-form">
+        <div class="form-group">
+          <label for="name">Имя</label>
+          <input
+            v-model="form.name"
+            type="text"
+            id="name"
+            placeholder="Введите имя"
+            required
+            :class="{ error: error }"
+          />
+        </div>
+
         <div class="form-group">
           <label for="username">Логин</label>
           <input
-            v-model="username"
+            v-model="form.username"
+            type="text"
+            id="username"
+            placeholder="Придумайте логин"
+            required
+            :class="{ error: error }"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Пароль</label>
+          <input
+            v-model="form.password"
+            type="password"
+            id="password"
+            placeholder="Не менее 6 символов"
+            required
+            :class="{ error: error }"
+          />
+        </div>
+
+        <div v-if="error" class="error-message">{{ error }}</div>
+
+        <button type="submit" :disabled="loading" class="login-btn">
+          <span v-if="loading" class="spinner"></span>
+          <span v-else>Создать администратора</span>
+        </button>
+      </form>
+
+      <!-- Форма входа -->
+      <form v-else @submit.prevent="handleLogin" class="login-form">
+        <div class="form-group">
+          <label for="username">Логин</label>
+          <input
+            v-model="form.username"
             type="text"
             id="username"
             placeholder="Введите логин"
@@ -18,11 +70,11 @@
             :class="{ error: error }"
           />
         </div>
-        
+
         <div class="form-group">
           <label for="password">Пароль</label>
           <input
-            v-model="password"
+            v-model="form.password"
             type="password"
             id="password"
             placeholder="Введите пароль"
@@ -30,48 +82,74 @@
             :class="{ error: error }"
           />
         </div>
-        
-        <div v-if="error" class="error-message">
-          {{ error }}
-        </div>
-        
+
+        <div v-if="error" class="error-message">{{ error }}</div>
+
         <button type="submit" :disabled="loading" class="login-btn">
           <span v-if="loading" class="spinner"></span>
           <span v-else>Войти</span>
         </button>
-        
-        <div class="login-hint">
-          <p><strong>Подсказка:</strong> логин и пароль - "admin"</p>
-        </div>
       </form>
-      
-      <router-link to="/" class="back-link">
-        ← Вернуться в каталог
-      </router-link>
+
+      <router-link to="/" class="back-link">← Вернуться в каталог</router-link>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { auth } from '@/services/api'
+import { auth, authAPI } from '@/services/api'
 
 const router = useRouter()
-const username = ref('')
-const password = ref('')
+
+const isFirstAdmin = ref(false)
 const loading = ref(false)
 const error = ref('')
+
+const form = ref({
+  name: '',
+  username: '',
+  password: '',
+})
+
+onMounted(async () => {
+  try {
+    const res = await authAPI.isFirst()
+    isFirstAdmin.value = res.data.is_first
+  } catch (e) {
+    console.error('Не удалось проверить наличие администраторов', e)
+  }
+})
 
 const handleLogin = async () => {
   error.value = ''
   loading.value = true
-  
   try {
-    await auth.login(username.value, password.value)
+    await auth.login(form.value.username, form.value.password)
     router.push('/admin')
   } catch (err) {
-    error.value = err.message || 'Ошибка авторизации'
+    error.value = err.response?.data?.error || 'Ошибка авторизации'
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleRegister = async () => {
+  error.value = ''
+  loading.value = true
+  try {
+    const res = await authAPI.register({
+      name: form.value.name,
+      username: form.value.username,
+      password: form.value.password,
+    })
+    const { token, admin: adminData } = res.data
+    localStorage.setItem('token', token)
+    localStorage.setItem('adminData', JSON.stringify(adminData))
+    router.push('/admin')
+  } catch (err) {
+    error.value = err.response?.data?.error || 'Ошибка регистрации'
   } finally {
     loading.value = false
   }
@@ -105,7 +183,7 @@ const handleLogin = async () => {
 .login-header h1 {
   color: #333;
   margin: 0 0 10px 0;
-  font-size: 28px;
+  font-size: 26px;
 }
 
 .login-header p {
@@ -201,21 +279,6 @@ const handleLogin = async () => {
   100% { transform: rotate(360deg); }
 }
 
-.login-hint {
-  margin-top: 20px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 14px;
-  color: #666;
-  border: 1px dashed #ddd;
-}
-
-.login-hint p {
-  margin: 0;
-}
-
 .back-link {
   display: block;
   text-align: center;
@@ -234,9 +297,9 @@ const handleLogin = async () => {
   .login-container {
     padding: 30px 20px;
   }
-  
+
   .login-header h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
 }
 </style>

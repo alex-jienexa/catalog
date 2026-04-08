@@ -10,3 +10,6 @@ database:
 upload:
   path: "./uploads"
   max_size: 10485760  # 10 MB
+
+jwt:
+  secret: "change-me-in-production-please"

@@ -82,7 +82,7 @@
       </section>
       
       <!-- Карта -->
-      <section class="map-section">
+      <!-- <section class="map-section">
         <h2 class="section-title">📍 Мы находимся</h2>
         <div class="map-placeholder">
           <div class="map-content">
@@ -90,7 +90,7 @@
             <p>БЦ "Деловой", 5 этаж</p>
           </div>
         </div>
-      </section>
+      </section> -->
     </div>
   </div>
 </template>

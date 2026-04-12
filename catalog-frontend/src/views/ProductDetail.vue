@@ -52,10 +52,10 @@
             @close="showBookingModal = false"
           />
           
-          <div class="seller-info">
+          <!-- <div class="seller-info">
             <h3>Информация о связи</h3>
             <p>Для связи с продавцом используйте <a href="/about">контакты</a>.</p>
-          </div>
+          </div> -->
         </div>
       </div>
       

@@ -24,7 +24,9 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       auth.logout();
-      window.location.href = '/admin/login';
+      if (window.location.pathname !== '/admin/login') {
+        window.location.href = '/admin/login';
+      }
     }
     return Promise.reject(error);
   }
